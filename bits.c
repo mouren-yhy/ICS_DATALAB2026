@@ -191,63 +191,44 @@ int leftBitCount(int x) {
 unsigned float_i2f(int x) {
     if (!x)
         return 0;
-    unsigned S = 0;
+    unsigned S = x & 0x80000000;
     unsigned abs_x;
-    int e;
-    if (x == 0x80000000) {
-        S = 1;
-        e = 31;
-        abs_x = 0x80000000U;
-    } else if (x < 0) {
-        S = 1;
+    if (S) {
         abs_x = -x;
     } else {
-        S = 0;
         abs_x = x;
     }
     unsigned temp = abs_x;
-    e = 0;
-    if (temp >> 16) { e += 16; temp >>= 16; }
-    if (temp >> 8)  { e += 8;  temp >>= 8;  }
-    if (temp >> 4)  { e += 4;  temp >>= 4;  }
-    if (temp >> 2)  { e += 2;  temp >>= 2;  }
-    if (temp >> 1)  { e += 1;  temp >>= 1;  }
-
+    int e = 0;
+    while (temp >> 1) {
+        e = e + 1;
+        temp = temp >> 1;
+    }
     unsigned m;
     if (e > 23) {
         int shift = e - 23;
         m = (abs_x >> shift) & 0x7FFFFF;
-        unsigned G = 0;
-        if (shift >= 1) {
-            G = (abs_x >> (shift - 1)) & 1U;
+        unsigned half = 1 << (shift - 1);
+        unsigned rem = abs_x & ((1 << shift) - 1);
+        if (rem > half) {
+            m = m + 1;
         }
-        if (G != 0) {
-            unsigned R = 0;
-            unsigned sticky = 0;
-            if (shift >= 2) {
-                R = (abs_x >> (shift - 2)) & 1U;
-                sticky = abs_x & ((1U << (shift - 1)) - 1U);
-            }
-            if ((R | sticky) != 0) {
+        if (rem == half) {
+            if (m & 1) {
                 m = m + 1;
-            } else {
-                if ((m & 1U) != 0) {
-                    m = m + 1;
-                }
             }
-            if (m == 0x800000) {
-                m = 0;
-                e = e + 1;
-            }
+        }
+        if (m == 0x800000) {
+            m = 0;
+            e = e + 1;
         }
     } else {
         m = (abs_x << (23 - e)) & 0x7FFFFF;
     }
     int E = e + 127;
-    unsigned res = (S << 31) | (E << 23) | m;
+    unsigned res = S | (E << 23) | m;
     return res;
 }
-
 
 /*
  * floatScale2 - Return bit-level equivalent of expression 2*f for
@@ -261,39 +242,54 @@ unsigned float_i2f(int x) {
  *   Difficulty: 4
  */
 unsigned floatScale2(unsigned uf) {
-    return 2;
+    unsigned s = uf & 0x80000000;
+    unsigned exp = (uf >> 23) & 0xFF;
+    unsigned mant = uf & 0x7FFFFF;
+    if (exp == 0xFF) {
+        return uf;
+    } else if (exp == 0) {
+        mant <<= 1;
+        if (mant & 0x800000)
+            exp = 1;
+        mant &= 0x7FFFFF;
+    } else {
+        exp += 1;
+        if (exp == 0xFF) {
+            mant = 0;
+        }
+    }
+    return s | (exp<<23) | mant;
 }
+    /*
+     * float64_f2i - Convert a 64-bit IEEE 754 floating-point number to a 32-bit signed integer.
+     *   The conversion rounds towards zero.
+     *   Note: Assumes IEEE 754 representation and standard two's complement integer format.
+     *   Parameters:
+     *     uf1 - The lower 32 bits of the 64-bit floating-point number.
+     *     uf2 - The higher 32 bits of the 64-bit floating-point number.
+     *   Returns:
+     *     The converted integer value, or 0x80000000 on overflow, or 0 on underflow.
+     *   Legal ops: >> << | & ~ ! + - > < >= <= if else
+     *   Max ops: 60
+     *   Difficulty: 3
+     */
+    int float64_f2i(unsigned uf1, unsigned uf2) {
+        return 2;
+    }
 
-/*
- * float64_f2i - Convert a 64-bit IEEE 754 floating-point number to a 32-bit signed integer.
- *   The conversion rounds towards zero.
- *   Note: Assumes IEEE 754 representation and standard two's complement integer format.
- *   Parameters:
- *     uf1 - The lower 32 bits of the 64-bit floating-point number.
- *     uf2 - The higher 32 bits of the 64-bit floating-point number.
- *   Returns:
- *     The converted integer value, or 0x80000000 on overflow, or 0 on underflow.
- *   Legal ops: >> << | & ~ ! + - > < >= <= if else
- *   Max ops: 60
- *   Difficulty: 3
- */
-int float64_f2i(unsigned uf1, unsigned uf2) {
-    return 2;
-}
-
-/*
- * floatPower2 - Return bit-level equivalent of the expression 2.0^x
- *   (2.0 raised to the power x) for any 32-bit integer x.
- *
- *   The unsigned value that is returned should have the identical bit
- *   representation as the single-precision floating-point number 2.0^x.
- *   If the result is too small to be represented as a denorm, return
- *   0. If too large, return +INF.
- *
- *   Legal ops: < > <= >= << >> + - & | ~ ! if else &&
- *   Max ops: 30
- *   Difficulty: 4
- */
-unsigned floatPower2(int x) {
-    return 2;
-}
+    /*
+     * floatPower2 - Return bit-level equivalent of the expression 2.0^x
+     *   (2.0 raised to the power x) for any 32-bit integer x.
+     *
+     *   The unsigned value that is returned should have the identical bit
+     *   representation as the single-precision floating-point number 2.0^x.
+     *   If the result is too small to be represented as a denorm, return
+     *   0. If too large, return +INF.
+     *
+     *   Legal ops: < > <= >= << >> + - & | ~ ! if else &&
+     *   Max ops: 30
+     *   Difficulty: 4
+     */
+    unsigned floatPower2(int x) {
+        return 2;
+    }
