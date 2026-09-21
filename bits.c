@@ -11,7 +11,7 @@
  * and run the complete tests with test.py.
  */
 
- /*
+/*
  * bitAnd - x & y using only ~ and |
  * Example: bitAnd(4, 5) = 4
  * Legal ops: ~ |
@@ -19,7 +19,7 @@
  * Difficulty: 1
  */
 int bitAnd(int x, int y) {
-    return ~((~x)|(~y));
+    return ~((~x) | (~y));
 }
 
 /*
@@ -30,7 +30,7 @@ int bitAnd(int x, int y) {
  *   Difficulty: 1
  */
 int bitXor(int x, int y) {
-    return 2;
+    return ~(~(~x & y) & (~(x & ~y)));
 }
 
 /*
@@ -50,7 +50,22 @@ int bitXor(int x, int y) {
  *   1 if x and y have the same sign , 0 otherwise.
  */
 int samesign(int x, int y) {
-    return 2;
+    if (!x && !y) {
+        return 1;
+    } 
+    else if ((x>>31)^(y>>31)) {
+        return 0;
+    } else {
+        if(!x&&y)
+        {
+            return 0;
+        }
+        if((!y&&x))
+        {
+            return 0;
+        }
+        return 1;
+    }
 }
 
 /*
