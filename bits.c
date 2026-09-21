@@ -52,16 +52,13 @@ int bitXor(int x, int y) {
 int samesign(int x, int y) {
     if (!x && !y) {
         return 1;
-    } 
-    else if ((x>>31)^(y>>31)) {
+    } else if ((x >> 31) ^ (y >> 31)) {
         return 0;
     } else {
-        if(!x&&y)
-        {
+        if (!x && y) {
             return 0;
         }
-        if((!y&&x))
-        {
+        if ((!y && x)) {
             return 0;
         }
         return 1;
