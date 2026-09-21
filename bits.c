@@ -258,38 +258,70 @@ unsigned floatScale2(unsigned uf) {
             mant = 0;
         }
     }
-    return s | (exp<<23) | mant;
+    return s | (exp << 23) | mant;
 }
-    /*
-     * float64_f2i - Convert a 64-bit IEEE 754 floating-point number to a 32-bit signed integer.
-     *   The conversion rounds towards zero.
-     *   Note: Assumes IEEE 754 representation and standard two's complement integer format.
-     *   Parameters:
-     *     uf1 - The lower 32 bits of the 64-bit floating-point number.
-     *     uf2 - The higher 32 bits of the 64-bit floating-point number.
-     *   Returns:
-     *     The converted integer value, or 0x80000000 on overflow, or 0 on underflow.
-     *   Legal ops: >> << | & ~ ! + - > < >= <= if else
-     *   Max ops: 60
-     *   Difficulty: 3
-     */
-    int float64_f2i(unsigned uf1, unsigned uf2) {
-        return 2;
+/*
+ * float64_f2i - Convert a 64-bit IEEE 754 floating-point number to a 32-bit signed integer.
+ *   The conversion rounds towards zero.
+ *   Note: Assumes IEEE 754 representation and standard two's complement integer format.
+ *   Parameters:
+ *     uf1 - The lower 32 bits of the 64-bit floating-point number.
+ *     uf2 - The higher 32 bits of the 64-bit floating-point number.
+ *   Returns:
+ *     The converted integer value, or 0x80000000 on overflow, or 0 on underflow.
+ *   Legal ops: >> << | & ~ ! + - > < >= <= if else
+ *   Max ops: 60
+ *   Difficulty: 3
+ */
+int float64_f2i(unsigned uf1, unsigned uf2) {
+    unsigned sign = (uf2 >> 31) & 1U;
+    unsigned exp = (uf2 & 0x7FF00000) >> 20;
+
+    if (!((exp + 1) & 0x7FF)) {
+        return 0x80000000U;
+    }
+    if (!exp) {
+        return 0;
     }
 
-    /*
-     * floatPower2 - Return bit-level equivalent of the expression 2.0^x
-     *   (2.0 raised to the power x) for any 32-bit integer x.
-     *
-     *   The unsigned value that is returned should have the identical bit
-     *   representation as the single-precision floating-point number 2.0^x.
-     *   If the result is too small to be represented as a denorm, return
-     *   0. If too large, return +INF.
-     *
-     *   Legal ops: < > <= >= << >> + - & | ~ ! if else &&
-     *   Max ops: 30
-     *   Difficulty: 4
-     */
-    unsigned floatPower2(int x) {
-        return 2;
+    unsigned mant_high = uf2 & 0x000FFFFF;
+    unsigned mant_low = uf1;
+    int e = exp - 1023;
+
+    if (e < 0) {
+        return 0;
     }
+    if (e > 30) {
+        return 0x80000000U;
+    }
+
+    unsigned mant = 0U;
+    if (e <= 20) {
+        mant = ((1U << 20) | mant_high) >> (20 - e);
+    } else {
+        unsigned shift = e - 20;
+        mant = (((1U << 20) | mant_high) << shift) | ((mant_low & (((1U << shift) - 1) << (32 - shift))) >> (32 - shift));
+    }
+
+    if (sign) {
+        mant = ~mant + 1U;
+    }
+    return mant;
+}
+
+/*
+ * floatPower2 - Return bit-level equivalent of the expression 2.0^x
+ *   (2.0 raised to the power x) for any 32-bit integer x.
+ *
+ *   The unsigned value that is returned should have the identical bit
+ *   representation as the single-precision floating-point number 2.0^x.
+ *   If the result is too small to be represented as a denorm, return
+ *   0. If too large, return +INF.
+ *
+ *   Legal ops: < > <= >= << >> + - & | ~ ! if else &&
+ *   Max ops: 30
+ *   Difficulty: 4
+ */
+unsigned floatPower2(int x) {
+    return 2;
+}
