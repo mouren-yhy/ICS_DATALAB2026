@@ -323,5 +323,13 @@ int float64_f2i(unsigned uf1, unsigned uf2) {
  *   Difficulty: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    if (x > 127) {
+        return 0x7F800000;
+    } else if (x < -149) {
+        return 0;
+    } else if (x <= -127) {
+        int shift = -127 - x;
+        return 0x400000 >> shift;
+    }
+    return (x + 127) << 23;
 }
