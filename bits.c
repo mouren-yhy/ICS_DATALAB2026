@@ -331,5 +331,5 @@ unsigned floatPower2(int x) {
         int shift = -127 - x;
         return 0x400000 >> shift;
     }
-    return (x + 127) << 23;
+    return 0 << 31 | (x + 127) << 23;
 }
