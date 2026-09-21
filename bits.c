@@ -122,7 +122,7 @@ int byteSwap(int x, int n, int m) {
 unsigned reverse(unsigned v) {
     unsigned r = 0;
     unsigned maks = 0x1;
-    for (int i = 0; i!=32; i++) {
+    for (int i = 0; i != 32; i++) {
         r = r << 1;
         r = r | (v & maks);
         v = v >> 1;
@@ -189,8 +189,65 @@ int leftBitCount(int x) {
  *   Difficulty: 4
  */
 unsigned float_i2f(int x) {
-    return 2;
+    if (!x)
+        return 0;
+    unsigned S = 0;
+    unsigned abs_x;
+    int e;
+    if (x == 0x80000000) {
+        S = 1;
+        e = 31;
+        abs_x = 0x80000000U;
+    } else if (x < 0) {
+        S = 1;
+        abs_x = -x;
+    } else {
+        S = 0;
+        abs_x = x;
+    }
+    unsigned temp = abs_x;
+    e = 0;
+    if (temp >> 16) { e += 16; temp >>= 16; }
+    if (temp >> 8)  { e += 8;  temp >>= 8;  }
+    if (temp >> 4)  { e += 4;  temp >>= 4;  }
+    if (temp >> 2)  { e += 2;  temp >>= 2;  }
+    if (temp >> 1)  { e += 1;  temp >>= 1;  }
+
+    unsigned m;
+    if (e > 23) {
+        int shift = e - 23;
+        m = (abs_x >> shift) & 0x7FFFFF;
+        unsigned G = 0;
+        if (shift >= 1) {
+            G = (abs_x >> (shift - 1)) & 1U;
+        }
+        if (G != 0) {
+            unsigned R = 0;
+            unsigned sticky = 0;
+            if (shift >= 2) {
+                R = (abs_x >> (shift - 2)) & 1U;
+                sticky = abs_x & ((1U << (shift - 1)) - 1U);
+            }
+            if ((R | sticky) != 0) {
+                m = m + 1;
+            } else {
+                if ((m & 1U) != 0) {
+                    m = m + 1;
+                }
+            }
+            if (m == 0x800000) {
+                m = 0;
+                e = e + 1;
+            }
+        }
+    } else {
+        m = (abs_x << (23 - e)) & 0x7FFFFF;
+    }
+    int E = e + 127;
+    unsigned res = (S << 31) | (E << 23) | m;
+    return res;
 }
+
 
 /*
  * floatScale2 - Return bit-level equivalent of expression 2*f for
