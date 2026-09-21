@@ -104,7 +104,14 @@ int logtwo(int v) {
  *    Difficulty: 2
  */
 int byteSwap(int x, int n, int m) {
-    return 2;
+    int n_shift = x >> (n << 3);
+    int m_shift = x >> (m << 3);
+    int mask = 0x000000FF;
+    n_shift = n_shift & mask;
+    m_shift = m_shift & mask;
+    mask = ~(0xFF << (n << 3) | 0xFF << (m << 3));
+    int rest = x & mask;
+    return rest | (n_shift << (m << 3)) | (m_shift << (n << 3));
 }
 
 /*
@@ -116,7 +123,14 @@ int byteSwap(int x, int n, int m) {
  *   Difficulty: 3
  */
 unsigned reverse(unsigned v) {
-    return 2;
+    unsigned r = 0;
+    unsigned maks = 0x1;
+    for (int i = 0; i < 32; i++) {
+        r = r << 1;
+        r = r | (v & maks);
+        v = v >> 1;
+    }
+    return r;
 }
 
 /*
@@ -128,7 +142,10 @@ unsigned reverse(unsigned v) {
  *   Difficulty: 3
  */
 int logicalShift(int x, int n) {
-    return 2;
+    x >>= n;
+    int mask = 1 << 31;
+    mask = ~(mask >> n << 1);
+    return x & mask;
 }
 
 /*
@@ -140,7 +157,30 @@ int logicalShift(int x, int n) {
  *   Difficulty: 4
  */
 int leftBitCount(int x) {
-    return 2;
+    int cnt = 0;
+    int mask16 = !~(x >> 16);
+    cnt += mask16 << 4;
+    x = x << (mask16 << 4);
+
+    int mask8 = !~(x >> 24);
+    cnt += mask8 << 3;
+    x = x << (mask8 << 3);
+
+    int mask4 = !~(x >> 28);
+    cnt += mask4 << 2;
+    x = x << (mask4 << 2);
+
+    int mask2 = !~(x >> 30);
+    cnt += mask2 << 1;
+    x = x << (mask2 << 1);
+
+    int mask1 = !~(x >> 31);
+    cnt += mask1;
+    x = x << (mask1);
+
+    int mask0 = x & 0x80000000;
+    cnt += !!mask0;
+    return cnt;
 }
 
 /*
