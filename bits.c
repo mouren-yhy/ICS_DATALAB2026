@@ -30,7 +30,7 @@ int bitAnd(int x, int y) {
  *   Difficulty: 1
  */
 int bitXor(int x, int y) {
-    return ~(~(~x & y) & (~(x & ~y)));
+    return ~(~x & ~y) & ~(x & y);
 }
 
 /*
@@ -104,14 +104,11 @@ int logtwo(int v) {
  *    Difficulty: 2
  */
 int byteSwap(int x, int n, int m) {
-    int n_shift = x >> (n << 3);
-    int m_shift = x >> (m << 3);
-    int mask = 0x000000FF;
-    n_shift = n_shift & mask;
-    m_shift = m_shift & mask;
-    mask = ~(0xFF << (n << 3) | 0xFF << (m << 3));
-    int rest = x & mask;
-    return rest | (n_shift << (m << 3)) | (m_shift << (n << 3));
+    int ns = n << 3, ms = m << 3;
+    int nb = (x >> ns) & 0xFF;
+    int mb = (x >> ms) & 0xFF;
+    int mask = ~((0xFF << ns) | (0xFF << ms));
+    return (x & mask) | (nb << ms) | (mb << ns);
 }
 
 /*
@@ -125,7 +122,7 @@ int byteSwap(int x, int n, int m) {
 unsigned reverse(unsigned v) {
     unsigned r = 0;
     unsigned maks = 0x1;
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i!=32; i++) {
         r = r << 1;
         r = r | (v & maks);
         v = v >> 1;
