@@ -1,4 +1,3 @@
-//更新测试
 /* WARNING: Do not include any other libraries here,
  * otherwise you will get an error while running test.py
  * You can still use printf for debugging without including
